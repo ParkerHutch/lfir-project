@@ -12,6 +12,7 @@ from mani_skill.utils.building.ground import build_ground
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.structs.types import GPUMemoryConfig, SceneConfig, SimConfig
+import random
 
 class QuadrupedReachEnv(BaseEnv):
     SUPPORTED_ROBOTS = ["anymal_c", "unitree_go2_simplified_locomotion"]
@@ -19,6 +20,8 @@ class QuadrupedReachEnv(BaseEnv):
     default_qpos: torch.Tensor
 
     _UNDESIRED_CONTACT_LINK_NAMES: List[str] = None
+
+    CUBE_HALF_SIZE = 0.25
 
     def __init__(self, *args, robot_uids="anymal_c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -77,6 +80,15 @@ class QuadrupedReachEnv(BaseEnv):
             add_collision=False,
             body_type="kinematic",
         )
+        
+        self.cube = actors.build_cube(
+            self.scene,
+            half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
+            color=[1, 0, 0, 1], # red
+            name="obstacle_cube",
+            add_collision=True,
+            body_type="static"
+        )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
@@ -92,6 +104,22 @@ class QuadrupedReachEnv(BaseEnv):
             noise_scale = 2
             xyz[:, 1] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2
             self.goal.set_pose(Pose.create_from_pq(xyz))
+
+            # randomly place the cube
+            robot_pose_p = list(self.agent.robot.pose.p[0])
+            goal_pose_p = list(self.goal.pose.p[0])
+
+            robot_x_distance_to_goal = abs(robot_pose_p[0] - goal_pose_p[0])
+            
+            cube_forward_delta = max(random.random() * robot_x_distance_to_goal, QuadrupedReachEnv.CUBE_HALF_SIZE)
+            cube_horizontal_delta = random.random() * QuadrupedReachEnv.CUBE_HALF_SIZE
+            
+            cube_pose_p = [robot_pose_p[0] + cube_forward_delta, goal_pose_p[1] + cube_horizontal_delta, 0] 
+            
+            print(f'Robot XYZ: {robot_pose_p}')
+            print(f'Goal XYZ: {self.goal.pose.p[0]}')
+            print(f'Cube Pose XYZ: {cube_pose_p}')
+            self.cube.set_pose(sapien.Pose(p=cube_pose_p))
 
     def evaluate(self):
         is_fallen = self.agent.is_fallen()
