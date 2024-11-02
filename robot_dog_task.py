@@ -25,7 +25,7 @@ class QuadrupedReachEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="anymal_c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
-
+        
     @property
     def _default_sim_config(self):
         return SimConfig(
@@ -47,7 +47,7 @@ class QuadrupedReachEnv(BaseEnv):
                 fov=np.pi / 2,
                 near=0.01,
                 far=100,
-                mount=self.agent.robot.links[0],
+                mount=self.agent.robot.links[0] if hasattr(self, 'agent') else None,
             )
         ]
 
@@ -67,8 +67,24 @@ class QuadrupedReachEnv(BaseEnv):
         ]
 
     def _load_agent(self, options: dict):
+        # Load the agent first
         super()._load_agent(options)
-        self.agent.robot.set_pose(sapien.Pose(p=[0, 0, 1]))
+        
+        # Get the standing keyframe
+        keyframe = self.agent.keyframes["standing"]
+        
+        # Convert position to numpy array with correct shape and dtype
+        position = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+        
+        # Create quaternion for identity rotation [w, x, y, z]
+        quaternion = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        
+        # Create the pose with properly formatted numpy arrays
+        initial_pose = sapien.Pose(p=position, q=quaternion)
+        
+        # Set the pose and qpos
+        self.agent.robot.set_pose(initial_pose)
+        self.agent.robot.set_qpos(keyframe.qpos)
 
     def _load_scene(self, options: dict):
         self.ground = build_ground(self.scene, floor_width=400)
@@ -84,7 +100,7 @@ class QuadrupedReachEnv(BaseEnv):
         self.cube = actors.build_cube(
             self.scene,
             half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
-            color=[1, 0, 0, 1], # red
+            color=[1, 0, 0, 1],
             name="obstacle_cube",
             add_collision=True,
             body_type="static"
@@ -94,31 +110,53 @@ class QuadrupedReachEnv(BaseEnv):
         with torch.device(self.device):
             b = len(env_idx)
             keyframe = self.agent.keyframes["standing"]
-            self.agent.robot.set_pose(keyframe.pose)
+
+            # Convert position to numpy array
+            position = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+            quaternion = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
+
+            # Create pose with properly formatted arrays
+            keyframe_pose = sapien.Pose(p=position, q=quaternion)
+
+            self.agent.robot.set_pose(keyframe_pose)
             self.agent.robot.set_qpos(keyframe.qpos)
-            # sample random goal
-            xyz = torch.zeros((b, 3))
+
+            # Sample random goals
+            xyz = torch.zeros((b, 3), device=self.device)
             noise_scale = 1
-            xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + 4
+            xyz[:, 0] = torch.rand(size=(b,), device=self.device) * noise_scale - noise_scale / 2 + 4
             noise_scale = 2
-            xyz[:, 1] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2
-            self.goal.set_pose(Pose.create_from_pq(xyz))
+            xyz[:, 1] = torch.rand(size=(b,), device=self.device) * noise_scale - noise_scale / 2
 
-            # randomly place the cube
-            robot_pose_p = list(self.agent.robot.pose.p[0])
-            goal_pose_p = list(self.goal.pose.p[0])
+            # Set goal positions
+            for i in range(b):
+                goal_position = xyz[i].cpu().numpy().astype(np.float32)
+                self.goal.set_pose(sapien.Pose(p=goal_position))
 
-            robot_x_distance_to_goal = abs(robot_pose_p[0] - goal_pose_p[0])
-            
-            cube_forward_delta = max(random.random() * robot_x_distance_to_goal, QuadrupedReachEnv.CUBE_HALF_SIZE)
-            cube_horizontal_delta = random.random() * QuadrupedReachEnv.CUBE_HALF_SIZE
-            
-            cube_pose_p = [robot_pose_p[0] + cube_forward_delta, goal_pose_p[1] + cube_horizontal_delta, 0] 
-            
-            print(f'Robot XYZ: {robot_pose_p}')
-            print(f'Goal XYZ: {self.goal.pose.p[0]}')
-            print(f'Cube Pose XYZ: {cube_pose_p}')
-            self.cube.set_pose(sapien.Pose(p=cube_pose_p))
+            # Set cube positions for each environment
+            robot_pose = self.agent.robot.pose.p
+
+            for i in range(b):
+                goal_pose = self.goal.pose.p
+
+                # Extract x-coordinates for distance calculation
+                robot_x = robot_pose[i][0]  # Assuming robot_pose is a tensor with shape (b, 3)
+                goal_x = goal_pose[0][0]    # Assuming goal_pose is also a tensor with shape (b, 3)
+
+                # Calculate the distance along the x-axis
+                robot_x_distance_to_goal = torch.abs(robot_x - goal_x).item()
+
+                # Now we can safely use the scalar value
+                cube_forward_delta = max(random.random() * robot_x_distance_to_goal, self.CUBE_HALF_SIZE)
+                cube_horizontal_delta = random.random() * self.CUBE_HALF_SIZE
+
+                cube_position = np.array([
+                    robot_x + cube_forward_delta,
+                    goal_pose[i][1] + cube_horizontal_delta,  # Use the y-coordinate of the goal
+                    self.CUBE_HALF_SIZE
+                ], dtype=np.float32)
+
+                self.cube.set_pose(sapien.Pose(p=cube_position))
 
     def evaluate(self):
         is_fallen = self.agent.is_fallen()
@@ -158,7 +196,6 @@ class QuadrupedReachEnv(BaseEnv):
         robot_to_goal_dist = info["robot_to_goal_dist"]
         reaching_reward = 1 - torch.tanh(1 * robot_to_goal_dist)
 
-        # various penalties:
         lin_vel_z_l2 = torch.square(self.agent.robot.root_linear_velocity[:, 2])
         ang_vel_xy_l2 = (
             torch.square(self.agent.robot.root_angular_velocity[:, :2])
@@ -173,14 +210,17 @@ class QuadrupedReachEnv(BaseEnv):
         reward = 1 + 2 * reaching_reward + penalties
         reward[info["fail"]] = 0
         return reward
+    
+    def compute_normalized_dense_reward(self, obs, action, info):
+        # This can be similar to your existing reward computation logic
+        reward = self.compute_dense_reward(obs, action, info)
+        
+        # Normalize the reward if needed
+        max_reward = 10.0  # Define your maximum possible reward
+        normalized_reward = reward / max_reward  # Normalize the reward
+        
+        return normalized_reward
 
-    def compute_normalized_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        """
-        Override the parent class method to provide a normalized version of the dense reward
-        """
-        raw_reward = self.compute_dense_reward(obs=obs, action=action, info=info)
-        max_reward = 3.0  # This is based on the maximum possible reward in compute_dense_reward
-        return raw_reward / max_reward
 
 @register_env("AnymalC-Move-v1", max_episode_steps=200)
 class AnymalCReachEnv(QuadrupedReachEnv):
@@ -191,13 +231,3 @@ class AnymalCReachEnv(QuadrupedReachEnv):
         self.default_qpos = torch.from_numpy(ANYmalC.keyframes["standing"].qpos).to(
             self.device
         )
-
-# @register_env("UnitreeGo2-Reach-v1", max_episode_steps=200)
-# class UnitreeGo2ReachEnv(QuadrupedReachEnv):
-#     _UNDESIRED_CONTACT_LINK_NAMES = ["FR_thigh", "RR_thigh", "FL_thigh", "RL_thigh"]
-
-#     def __init__(self, *args, robot_uids="unitree_go2_simplified_locomotion", **kwargs):
-#         super().__init__(*args, robot_uids=robot_uids, **kwargs)
-#         self.default_qpos = torch.from_numpy(
-#             UnitreeGo2Simplified.keyframes["standing"].qpos
-#         ).to(self.device)
