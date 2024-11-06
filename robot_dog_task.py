@@ -208,7 +208,7 @@ class QuadrupedReachEnv(BaseEnv):
             * -0.05
         )
         reward = 1 + 2 * reaching_reward + penalties
-        reward[info["fail"]] = 0
+        reward[info["fail"]] = -1 # 0
         return reward
     
     def compute_normalized_dense_reward(self, obs, action, info):
