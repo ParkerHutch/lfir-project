@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 import numpy as np
 import sapien
 import torch
-
+import random 
 from mani_skill.agents.robots.anymal.anymal_c import ANYmalC
 from mani_skill.agents.robots.unitree_go.unitree_go2 import UnitreeGo2Simplified
 from mani_skill.envs.sapien_env import BaseEnv
@@ -22,6 +22,8 @@ class QuadrupedReachEnv(BaseEnv):
     default_qpos: torch.Tensor
 
     _UNDESIRED_CONTACT_LINK_NAMES: List[str] = None
+
+    CUBE_HALF_SIZE = 0.4 # 0.25
 
     def __init__(self, *args, robot_uids="anymal-c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -67,14 +69,6 @@ class QuadrupedReachEnv(BaseEnv):
             )
         ]
 
-    # def _load_agent(self, options: dict):
-    #     super()._load_agent(options, sapien.Pose(p=[0, 0, 1]))
-
-    # def _load_agent(self, options: dict):
-    #     super()._load_agent(options)
-    #     if hasattr(self, 'agent') and hasattr(self.agent, 'robot'):
-    #         self.agent.robot.set_pose(sapien.Pose(p=[0, 0, 1]))
-
     def _load_agent(self, options: dict):
         super()._load_agent(options)
 
@@ -88,6 +82,14 @@ class QuadrupedReachEnv(BaseEnv):
             add_collision=False,
             body_type="kinematic",
         )
+        self.cube = actors.build_cube(
+            self.scene,
+            half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
+            color=[1, 0, 0, 1], #red
+            name="obstacle_cube",
+            add_collision=True,
+            body_type="kinematic"
+        )
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
@@ -97,12 +99,40 @@ class QuadrupedReachEnv(BaseEnv):
             self.agent.robot.set_qpos(keyframe.qpos)
             # sample random goal
             xyz = torch.zeros((b, 3))
-            xyz[:, 0] = 2.5
+            # xyz[:, 0] = 2.5
             noise_scale = 1
-            xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + 2.5
+            # xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + 2.5
+            xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + 4
             noise_scale = 2
             xyz[:, 1] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2
             self.goal.set_pose(Pose.create_from_pq(xyz))
+
+            # randomly place the cube
+            robot_pose_p = list(self.agent.robot.pose.p[0])
+            goal_pose_p = list(self.goal.pose.p[0])
+            robot_x_distance_to_goal = abs(robot_pose_p[0] - goal_pose_p[0])
+            
+            cube_forward_delta = max(random.random() * robot_x_distance_to_goal, QuadrupedReachEnv.CUBE_HALF_SIZE)
+            cube_horizontal_delta = random.random() * QuadrupedReachEnv.CUBE_HALF_SIZE
+            
+            # cube_pose_p = [robot_pose_p[0] + cube_forward_delta, goal_pose_p[1] + cube_horizontal_delta, 0]
+
+            # cube_pose_p = np.array([
+            #     float(robot_pose_p[0] + cube_forward_delta),
+            #     float(goal_pose_p[1] + cube_horizontal_delta),
+            #     0.0
+            # ], dtype=np.float32)
+            ####################################################
+            cube_pose_p = np.array([
+                float((robot_pose_p[0] + goal_pose_p[0])/2), # halfway between the robot and goal for now for testing
+                float((robot_pose_p[1] + goal_pose_p[1])/2),
+                0.0
+            ], dtype=np.float32)
+            ####################################################
+            # print(f'Robot XYZ: {robot_pose_p}')
+            # print(f'Goal XYZ: {self.goal.pose.p[0]}')
+            # print(f'Cube Pose XYZ: {cube_pose_p}')
+            self.cube.set_pose(sapien.Pose(p=cube_pose_p))
 
     def evaluate(self):
         is_fallen = self.agent.is_fallen()
