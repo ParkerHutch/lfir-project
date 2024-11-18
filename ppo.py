@@ -21,7 +21,8 @@ from mani_skill.utils.wrappers.flatten import FlattenActionSpaceWrapper
 from mani_skill.utils.wrappers.record import RecordEpisode
 from mani_skill.vector.wrappers.gymnasium import ManiSkillVectorEnv
 
-from cinnamon_task import QuadrupedReachEnv
+# from cinnamon_task import QuadrupedReachEnv
+from cinnamon_task_obstacle_penalty import QuadrupedReachEnv
 
 @dataclass
 class Args:
