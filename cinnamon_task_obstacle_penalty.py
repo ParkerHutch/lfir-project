@@ -184,6 +184,11 @@ class QuadrupedReachEnv(BaseEnv):
 
         cube_penalty_steepness = 20 # larger = steeper, more like a step function
         cube_penalty_strength = 1 # larger = more influence on the reward function (should always be positive)
+        # experimented values
+        # | cube_penalty_steepness  | cube_penalty_strength | eval_success_at_end_mean=0.5  |   Notes
+        # | NaN                     |   0                   |   0.625                       |   Normal case / no obstacle penalty
+        # | 10                      |   10                  |   0                           |
+        # | 20                      |   1                   |   0.5                         | 
         touching_cube_penalty = -1 * cube_penalty_strength * torch.sigmoid(-(robot_to_cube_dist - threshold) * cube_penalty_steepness) # this is similar to tanh like above, but range is 0 to 1
             
         # various other penalties:
