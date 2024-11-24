@@ -179,11 +179,24 @@ class QuadrupedReachEnv(BaseEnv):
         reaching_reward = 1 - torch.tanh(1 * robot_to_goal_dist)
 
         # Proximity penalty: Penalize getting too close to the obstacle
+        """
+        When we only use the sigmoid function for the object penalty, I had these testing outputs:
+        # experimented values
+        # | cube_penalty_steepness  | cube_penalty_strength | eval_success_at_end_mean=0.5  |   Notes
+        # | NaN                     |   0                   |   0.625                       |   Normal case / no obstacle penalty
+        # | 10                      |   10                  |   0                           |
+        # | 20                      |   1                   |   0.5                         | 
+        touching_cube_penalty = -1 * cube_penalty_strength * torch.sigmoid(-(robot_to_cube_dist - threshold) * cube_penalty_steepness) # this is similar to tanh like above, but range is 0 to 1
+        """
+        proximity_penalty_steepness = 5 # larger = steeper, more like a step function
+        proximity_penalty_strength = 2 # larger = more influence on the reward function (should always be positive)
+        safety_radius_coefficient = 2
+
         robot_to_cube_dist = info["robot_to_cube_dist"]
-        safety_radius = 2 * QuadrupedReachEnv.CUBE_HALF_SIZE  # Set safety distance (e.g., twice the obstacle size)
+        safety_radius = safety_radius_cofficient * QuadrupedReachEnv.CUBE_HALF_SIZE  # Set safety distance (e.g., twice the obstacle size)
         proximity_penalty = torch.where(
             robot_to_cube_dist < safety_radius,
-            -2 * (1 - torch.tanh(5 * (safety_radius - robot_to_cube_dist))),
+            -proximity_penalty_strength * (1 - torch.tanh(proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
             torch.zeros_like(robot_to_cube_dist),
         )
 
