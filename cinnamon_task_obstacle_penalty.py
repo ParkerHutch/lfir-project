@@ -186,10 +186,11 @@ class QuadrupedReachEnv(BaseEnv):
         # | NaN                     |   0                   |   0.625                       |   Normal case / no obstacle penalty
         # | 10                      |   10                  |   0                           |
         # | 20                      |   1                   |   0.5                         | 
+        # | 10                      |   3                   |   1                           | Success rate based on video / Used exp for proximity penalty
         touching_cube_penalty = -1 * cube_penalty_strength * torch.sigmoid(-(robot_to_cube_dist - threshold) * cube_penalty_steepness) # this is similar to tanh like above, but range is 0 to 1
         """
         proximity_penalty_steepness = 5 # larger = steeper, more like a step function
-        proximity_penalty_strength = 2 # larger = more influence on the reward function (should always be positive)
+        proximity_penalty_strength = 3 # larger = more influence on the reward function (should always be positive)
         safety_radius_coefficient = 2
 
         robot_to_cube_dist = info["robot_to_cube_dist"]
@@ -199,6 +200,13 @@ class QuadrupedReachEnv(BaseEnv):
             -proximity_penalty_strength * (1 - torch.tanh(proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
             torch.zeros_like(robot_to_cube_dist),
         )
+
+        # Proximity penalty for Obstacle 1 - 100% success based on video evaluation
+        # proximity_penalty = torch.where(
+        #     robot_to_cube_dist < safety_radius,
+        #     -proximity_penalty_strength * (1 - torch.exp(-proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
+        #     torch.zeros_like(robot_to_cube_dist),
+        # )
 
         # Collision penalty: Strong penalty for touching the obstacle
         corner_zone_threshold = QuadrupedReachEnv.CUBE_HALF_SIZE * 1.1  # Slightly larger than the cube
@@ -247,12 +255,6 @@ class QuadrupedReachEnv(BaseEnv):
     ):
         max_reward = 3.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
-
-
-# python ppo.py --env_id="Cinnamon-Reach-v1" \
-#   --num_envs=1024 --update_epochs=8 --num_minibatches=32 \
-#   --total_timesteps=25_000_000 --num-steps=200 --num-eval-steps=200 \
-#   --gamma=0.99 --gae_lambda=0.95
 
 @register_env("Cinnamon-Reach-v2", max_episode_steps=200)
 class AnymalCReachEnv(QuadrupedReachEnv):
