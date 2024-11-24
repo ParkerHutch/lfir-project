@@ -180,23 +180,36 @@ class QuadrupedReachEnv(BaseEnv):
 
         # Proximity penalty: Penalize getting too close to the obstacle
         robot_to_cube_dist = info["robot_to_cube_dist"]
-        safety_radius = 2 * QuadrupedReachEnv.CUBE_HALF_SIZE  # Set safety distance (e.g., twice the obstacle size)
+        safety_radius = 2 * QuadrupedReachEnv.CUBE_HALF_SIZE  # Set safety distance
         proximity_penalty = torch.where(
             robot_to_cube_dist < safety_radius,
-            -2 * (1 - torch.tanh(5 * (safety_radius - robot_to_cube_dist))),
+            -3 * (1 - torch.exp(-10 * (safety_radius - robot_to_cube_dist))),  # Steeper penalty
             torch.zeros_like(robot_to_cube_dist),
         )
 
         # Collision penalty: Strong penalty for touching the obstacle
-        threshold = QuadrupedReachEnv.CUBE_HALF_SIZE
+        corner_zone_threshold = QuadrupedReachEnv.CUBE_HALF_SIZE * 1.1  # Slightly larger than the cube
         collision_penalty = torch.where(
-            robot_to_cube_dist < threshold,
-            torch.full_like(robot_to_cube_dist, -5),  # Fixed penalty for direct collision
+            robot_to_cube_dist < corner_zone_threshold,
+            torch.full_like(robot_to_cube_dist, -7),  # Stronger penalty near corners
             torch.zeros_like(robot_to_cube_dist),
         )
 
-        # Combine penalties
+        # Clearance reward: Encourage maintaining a safe margin
+        safe_margin = safety_radius + 0.2  # Additional clearance
+        clearance_reward = torch.where(
+            robot_to_cube_dist > safe_margin,
+            0.5 * (robot_to_cube_dist - safe_margin),  # Reward for extra clearance
+            torch.zeros_like(robot_to_cube_dist),
+        )
+
+        # Combine penalties and rewards
         obstacle_penalty = proximity_penalty + collision_penalty
+        reward = (
+            1 + 5 * reaching_reward  # Reward for getting closer to the goal
+            + clearance_reward       # Reward for maintaining clearance
+            + obstacle_penalty       # Proximity and collision penalties
+        )
 
         # Additional penalties for stability and control
         lin_vel_z_l2 = torch.square(self.agent.robot.root_linear_velocity[:, 2])
@@ -211,42 +224,10 @@ class QuadrupedReachEnv(BaseEnv):
             * -0.05
         )
 
-        # Final reward calculation
-        reward = (
-            1 + 5 * reaching_reward  # Reward for getting closer to the goal
-            + obstacle_penalty       # Proximity and collision penalties
-            + control_penalties      # Stability and control penalties
-        )
+        reward += control_penalties  # Add control penalties
         reward[info["fail"]] = 0  # Zero reward if the robot fails
 
         return reward
-
-
-    # def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-    #     robot_to_goal_dist = info["robot_to_goal_dist"]
-    #     reaching_reward = 1 - torch.tanh(1 * robot_to_goal_dist)
-
-    #     # touching cube penalty
-    #     robot_to_cube_dist = info["robot_to_cube_dist"]
-    #     threshold = 3 * QuadrupedReachEnv.CUBE_HALF_SIZE
-    #     touching_cube_penalty = -3 * torch.sigmoid(-(robot_to_cube_dist - threshold) * 10) # this is similar to tanh like above, but range is 0 to 1
-    #     # -2 is a bit promising. Maybe might be good to only enact penalty if Cinnamon is within a certain radius of the object?
-    #     # various other penalties:
-    #     lin_vel_z_l2 = torch.square(self.agent.robot.root_linear_velocity[:, 2])
-    #     ang_vel_xy_l2 = (
-    #         torch.square(self.agent.robot.root_angular_velocity[:, :2])
-    #     ).sum(axis=1)
-    #     penalties = (
-    #         lin_vel_z_l2 * -2
-    #         + ang_vel_xy_l2 * -0.05
-    #         + self._compute_undesired_contacts() * -1
-    #         + torch.linalg.norm(self.agent.robot.qpos - self.default_qpos, axis=1)
-    #         * -0.05
-    #         + touching_cube_penalty
-    #     )
-    #     reward = 1 + 5 * reaching_reward + penalties # note: I also adjusted the reward coefficient from 2 to 5
-    #     reward[info["fail"]] = 0
-    #     return reward
 
     def compute_normalized_dense_reward(
         self, obs: Any, action: torch.Tensor, info: Dict
