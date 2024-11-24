@@ -11,5 +11,6 @@ python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --n
 python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --num_minibatches=32 --total_timesteps=60_000_000 --num-steps=200 --num-eval-steps=200 --gamma=0.995 --gae_lambda=0.95 --checkpoint ./runs/Cinnamon_Walking/final_ckpt.pt
 
 # use this command to evaluate a trained model
-model_checkpoint=./runs/Cinnamon-Reach-v2__ppo__1__1732461164/final_ckpt.pt
+# model_checkpoint=./runs/Cinnamon-Reach-v2__ppo__1__1732461164/final_ckpt.pt
+model_checkpoint=./runs/Obstacle1-Cinnamon/final_ckpt.pt
 python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --num-steps=200 --num-eval-steps=200 --checkpoint $model_checkpoint --evaluate

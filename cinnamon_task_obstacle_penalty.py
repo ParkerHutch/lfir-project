@@ -186,7 +186,6 @@ class QuadrupedReachEnv(BaseEnv):
         # | NaN                     |   0                   |   0.625                       |   Normal case / no obstacle penalty
         # | 10                      |   10                  |   0                           |
         # | 20                      |   1                   |   0.5                         | 
-        # | 10                      |   3                   |   1                           | Success rate based on video / Used exp for proximity penalty
         touching_cube_penalty = -1 * cube_penalty_strength * torch.sigmoid(-(robot_to_cube_dist - threshold) * cube_penalty_steepness) # this is similar to tanh like above, but range is 0 to 1
         """
         proximity_penalty_steepness = 5 # larger = steeper, more like a step function
@@ -195,18 +194,18 @@ class QuadrupedReachEnv(BaseEnv):
 
         robot_to_cube_dist = info["robot_to_cube_dist"]
         safety_radius = safety_radius_coefficient * QuadrupedReachEnv.CUBE_HALF_SIZE  # Set safety distance (e.g., twice the obstacle size)
-        # proximity_penalty = torch.where(
-        #     robot_to_cube_dist < safety_radius,
-        #     -proximity_penalty_strength * (1 - torch.tanh(proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
-        #     torch.zeros_like(robot_to_cube_dist),
-        # )
-
-        # Proximity penalty for Obstacle 1 - 100% success based on video evaluation
         proximity_penalty = torch.where(
             robot_to_cube_dist < safety_radius,
-            -proximity_penalty_strength * (1 - torch.exp(-proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
+            -proximity_penalty_strength * (1 - torch.tanh(proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
             torch.zeros_like(robot_to_cube_dist),
         )
+
+        # Proximity penalty for Obstacle 1 - 100% success based on video evaluation
+        # proximity_penalty = torch.where(
+        #     robot_to_cube_dist < safety_radius,
+        #     -proximity_penalty_strength * (1 - torch.exp(-proximity_penalty_steepness * (safety_radius - robot_to_cube_dist))),
+        #     torch.zeros_like(robot_to_cube_dist),
+        # )
 
         # Collision penalty: Strong penalty for touching the obstacle
         corner_zone_threshold = QuadrupedReachEnv.CUBE_HALF_SIZE * 1.1  # Slightly larger than the cube

@@ -281,6 +281,7 @@ if __name__ == "__main__":
                     eval_obs, eval_rew, eval_terminations, eval_truncations, eval_infos = eval_envs.step(agent.get_action(eval_obs, deterministic=True))
                     if "final_info" in eval_infos:
                         mask = eval_infos["_final_info"]
+                        print("Success Rate:", eval_infos["final_info"]["success"].float().mean().item())
                         num_episodes += mask.sum()
                         for k, v in eval_infos["final_info"]["episode"].items():
                             eval_metrics[k].append(v)
