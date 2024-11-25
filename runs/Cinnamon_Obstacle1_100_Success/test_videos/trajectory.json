@@ -19,7 +19,7 @@
       "control_mode": "pd_joint_delta_pos",
       "elapsed_steps": 200,
       "reset_kwargs": {},
-      "success": true,
+      "success": false,
       "fail": false
     },
     {
@@ -46,7 +46,7 @@
       "control_mode": "pd_joint_delta_pos",
       "elapsed_steps": 200,
       "reset_kwargs": {},
-      "success": true,
+      "success": false,
       "fail": false
     },
     {
@@ -56,7 +56,7 @@
       "elapsed_steps": 200,
       "reset_kwargs": {},
       "success": false,
-      "fail": false
+      "fail": true
     },
     {
       "episode_id": 5,
