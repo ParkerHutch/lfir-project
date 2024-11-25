@@ -14,3 +14,5 @@ python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --n
 # model_checkpoint=./runs/Cinnamon-Reach-v2__ppo__1__1732461164/final_ckpt.pt
 model_checkpoint=./runs/Obstacle1-Cinnamon/final_ckpt.pt
 python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --num-steps=200 --num-eval-steps=200 --checkpoint $model_checkpoint --evaluate
+
+# The commands will now train cinnamon on the 3 obstacle environment. To go back to the single obstacle modify ppo.py to import the QuadrupedReachEnv from cinnamon_task_obstacle_penalty
