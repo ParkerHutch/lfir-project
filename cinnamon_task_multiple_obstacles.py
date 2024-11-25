@@ -288,7 +288,7 @@ class QuadrupedReachEnv(BaseEnv):
     def generate_random_cube_positions(robot_x_distance_to_goal, num_cubes=3):
         positions = []
         
-        max_forward_deviation = robot_x_distance_to_goal - QuadrupedReachEnv.CUBE_HALF_SIZE * 3
+        max_forward_deviation = robot_x_distance_to_goal - QuadrupedReachEnv.CUBE_HALF_SIZE * 6
         def is_far_enough(new_pos):
             """Check if the new position is far enough from all existing positions."""
             for pos in positions:
