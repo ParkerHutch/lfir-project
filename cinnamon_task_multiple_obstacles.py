@@ -23,13 +23,13 @@ class QuadrupedReachEnv(BaseEnv):
 
     _UNDESIRED_CONTACT_LINK_NAMES: List[str] = None
 
-    CUBE_HALF_SIZE = 0.2
+    CUBE_HALF_SIZE = 0.4
 
-    GOAL_DISTANCE = 8
+    GOAL_DISTANCE = 5
 
-    MIN_DISTANCE_BETWEEN_CUBES = 1
+    MIN_DISTANCE_BETWEEN_CUBES = 5
 
-    MAX_CUBE_HORIZONTAL_DEVIATION = 3
+    MAX_CUBE_HORIZONTAL_DEVIATION = 6
 
     def __init__(self, *args, robot_uids="anymal-c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -88,29 +88,30 @@ class QuadrupedReachEnv(BaseEnv):
             add_collision=False,
             body_type="kinematic",
         )
-        self.cube_1 = actors.build_cube(
+
+        self.cube_1 = actors.build_box(
             self.scene,
-            half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
-            color=[1, 0, 0, 1], #red
-            name="obstacle_cube_1",
+            half_sizes=[0.25, 0.25, 0.4],
+            color=[1, 0, 0, 1],
+            name="obstacle_box_1",
             add_collision=True,
             body_type="kinematic"
         )
 
-        self.cube_2 = actors.build_cube(
+        self.cube_2 = actors.build_box(
             self.scene,
-            half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
-            color=[1, 0, 0, 1], #red
-            name="obstacle_cube_2",
+            half_sizes=[0.25, 0.25, 0.4],
+            color=[1, 0, 0, 1],
+            name="obstacle_box_2",
             add_collision=True,
             body_type="kinematic"
         )
 
-        self.cube_3 = actors.build_cube(
+        self.cube_3 = actors.build_box(
             self.scene,
-            half_size=QuadrupedReachEnv.CUBE_HALF_SIZE,
-            color=[1, 0, 0, 1], #red
-            name="obstacle_cube_3",
+            half_sizes=[0.25, 0.25, 0.4],
+            color=[1, 0, 0, 1],
+            name="obstacle_box_3",
             add_collision=True,
             body_type="kinematic"
         )
@@ -252,11 +253,11 @@ class QuadrupedReachEnv(BaseEnv):
         obstacle_penalty_sum, clearance_reward_sum = compute_obstacle_penalties_and_clearance_reward_sum(
             proximity_penalty_steepness = 5, # larger = steeper, more like a step function
             proximity_penalty_strength = 3, # larger = more influence on the reward function (should always be positive)
-            safety_radius_coefficient = 2
+            safety_radius_coefficient = 1
         )
         # # Combine penalties and rewards
         reward = (
-            1 + 5 * reaching_reward  # Reward for getting closer to the goal
+            1 + 10 * reaching_reward  # Reward for getting closer to the goal
             + clearance_reward_sum       # Reward for maintaining clearance
             + obstacle_penalty_sum       # Proximity and collision penalties
         )
