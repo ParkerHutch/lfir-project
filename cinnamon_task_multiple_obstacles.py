@@ -23,13 +23,13 @@ class QuadrupedReachEnv(BaseEnv):
 
     _UNDESIRED_CONTACT_LINK_NAMES: List[str] = None
 
-    CUBE_HALF_SIZE = 0.4
+    CUBE_HALF_SIZE = 0.25
 
     GOAL_DISTANCE = 5
 
-    MIN_DISTANCE_BETWEEN_CUBES = 5
+    MIN_DISTANCE_BETWEEN_CUBES = 2
 
-    MAX_CUBE_HORIZONTAL_DEVIATION = 6
+    MAX_CUBE_HORIZONTAL_DEVIATION = 4
 
     def __init__(self, *args, robot_uids="anymal-c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
