@@ -24,12 +24,13 @@ class QuadrupedReachEnv(BaseEnv):
     _UNDESIRED_CONTACT_LINK_NAMES: List[str] = None
 
     CUBE_HALF_SIZE = 0.25
+    CUBE_HEIGHT = 1
 
     GOAL_DISTANCE = 5
 
-    MIN_DISTANCE_BETWEEN_CUBES = 2
+    MIN_DISTANCE_BETWEEN_CUBES = 1.5
 
-    MAX_CUBE_HORIZONTAL_DEVIATION = 4
+    MAX_CUBE_HORIZONTAL_DEVIATION = 2
 
     def __init__(self, *args, robot_uids="anymal-c", **kwargs):
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -91,7 +92,7 @@ class QuadrupedReachEnv(BaseEnv):
 
         self.cube_1 = actors.build_box(
             self.scene,
-            half_sizes=[0.25, 0.25, 0.4],
+            half_sizes=[QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HEIGHT],
             color=[1, 0, 0, 1],
             name="obstacle_box_1",
             add_collision=True,
@@ -100,7 +101,7 @@ class QuadrupedReachEnv(BaseEnv):
 
         self.cube_2 = actors.build_box(
             self.scene,
-            half_sizes=[0.25, 0.25, 0.4],
+            half_sizes=[QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HEIGHT],
             color=[1, 0, 0, 1],
             name="obstacle_box_2",
             add_collision=True,
@@ -109,7 +110,7 @@ class QuadrupedReachEnv(BaseEnv):
 
         self.cube_3 = actors.build_box(
             self.scene,
-            half_sizes=[0.25, 0.25, 0.4],
+            half_sizes=[QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HALF_SIZE, QuadrupedReachEnv.CUBE_HEIGHT],
             color=[1, 0, 0, 1],
             name="obstacle_box_3",
             add_collision=True,
@@ -123,13 +124,7 @@ class QuadrupedReachEnv(BaseEnv):
             self.agent.robot.set_pose(keyframe.pose)
             self.agent.robot.set_qpos(keyframe.qpos)
             # sample random goal
-            xyz = torch.zeros((b, 3))
-            # xyz[:, 0] = 2.5
-            noise_scale = 1
-            # xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + 2.5
-            xyz[:, 0] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2 + QuadrupedReachEnv.GOAL_DISTANCE
-            noise_scale = 2
-            xyz[:, 1] = torch.rand(size=(b,)) * noise_scale - noise_scale / 2
+            xyz = torch.tensor([QuadrupedReachEnv.GOAL_DISTANCE, 0, 0]).repeat(b, 1)
             self.goal.set_pose(Pose.create_from_pq(xyz))
 
             robot_pose_p = list(self.agent.robot.pose.p[0])
@@ -300,7 +295,7 @@ class QuadrupedReachEnv(BaseEnv):
 
         for _ in range(num_cubes):
             attempts_count = 0
-            while attempts_count < 5:
+            while attempts_count < 20:
                 cube_forward_delta = max(random.random() * max_forward_deviation + QuadrupedReachEnv.CUBE_HALF_SIZE * 3, QuadrupedReachEnv.CUBE_HALF_SIZE)
                 cube_horizontal_delta = random.random() * (QuadrupedReachEnv.MAX_CUBE_HORIZONTAL_DEVIATION * 2) - QuadrupedReachEnv.MAX_CUBE_HORIZONTAL_DEVIATION
 
