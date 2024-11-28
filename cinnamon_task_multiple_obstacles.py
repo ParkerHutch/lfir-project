@@ -248,7 +248,7 @@ class QuadrupedReachEnv(BaseEnv):
         obstacle_penalty_sum, clearance_reward_sum = compute_obstacle_penalties_and_clearance_reward_sum(
             proximity_penalty_steepness = 5, # larger = steeper, more like a step function
             proximity_penalty_strength = 3, # larger = more influence on the reward function (should always be positive)
-            safety_radius_coefficient = 1
+            safety_radius_coefficient = 2
         )
         # # Combine penalties and rewards
         reward = (
