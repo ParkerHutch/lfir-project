@@ -30,7 +30,7 @@ class QuadrupedReachEnv(BaseEnv):
     CUBE_HALF_SIZE = 0.4
     CUBE_HEIGHT = 0.2
 
-    GOAL_DISTANCE = 5
+    GOAL_DISTANCE = 3
 
     MIN_DISTANCE_BETWEEN_CUBES = 1.5
 
