@@ -11,7 +11,7 @@ python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --n
 
 # Training of Cinnamon for obstacle 3 parameters:
 # to train with the obstacle penalty, modify ppo.py to import the environment from cinnamon_task_obstacle_penalty and also use Cinnamon-Reach-v2 as the value for the env_id parameter in the command
-python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --num_minibatches=32 --total_timesteps=100_000_000 --num-steps=200 --num-eval-steps=200 --gamma=0.995 --gae_lambda=0.95 --checkpoint ./runs/Obstacle1_Optimized_Cinnamon/final_ckpt.pt
+python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --update_epochs=8 --num_minibatches=32 --total_timesteps=100_000_000 --num-steps=200 --num-eval-steps=200 --gamma=0.995 --gae_lambda=0.95 --checkpoint ./runs/Cinnamon_1_Obstacle_Success/final_ckpt.pt
 
 
 # OLD: use this command to evaluate a trained model
