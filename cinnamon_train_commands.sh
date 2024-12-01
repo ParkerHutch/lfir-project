@@ -22,4 +22,4 @@ python ppo.py --env_id="Cinnamon-Reach-v2" --num_envs=1024 --num-steps=200 --num
 # The commands will now train cinnamon on the 3 obstacle environment. To go back to the single obstacle modify ppo.py to import the QuadrupedReachEnv from cinnamon_task_obstacle_penalty
 
 # Use this command to evaluate a trained model (or multiple models) a certain number of times
-python model_evaluation.py ./runs/Cinnamon_3_Obstacle_Success/final_ckpt.pt ./runs/Cinnamon_1_Obstacle_Success/final_ckpt.pt ./runs/Cinnamon_Walking/final_ckpt.pt --num_runs 20
+python model_evaluation.py ./runs/Cinnamon_3_Obstacle_Success/final_ckpt.pt ./runs/Cinnamon_1_Obstacle_Success/final_ckpt.pt ./runs/Cinnamon_Walking/final_ckpt.pt --num_runs 20 --env_id Cinnamon-Reach-v2
