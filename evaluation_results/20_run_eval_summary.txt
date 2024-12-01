@@ -1,0 +1,17 @@
+Checkpoint Evaluation Summary
+============================
+
+Checkpoint: ./runs/Cinnamon_3_Obstacle_Success/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.3812
+Success Rate Standard Deviation: 0.2944
+Min Success Rate: 0.0000
+Max Success Rate: 0.8750
+
+Checkpoint: ./runs/Cinnamon_Walking/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.0000
+Success Rate Standard Deviation: 0.0000
+Min Success Rate: 0.0000
+Max Success Rate: 0.0000
+
