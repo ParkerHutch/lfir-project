@@ -23,7 +23,8 @@ from mani_skill.vector.wrappers.gymnasium import ManiSkillVectorEnv
 
 #from cinnamon_task_obstacle_penalty import QuadrupedReachEnv
 #from cinnamon_task_multiple_obstacles import QuadrupedReachEnv
-from cinnamon_task_cylinder_obstacles import QuadrupedReachEnv
+#from cinnamon_task_cylinder_obstacles import QuadrupedReachEnv
+from cinnamon_task_1_cylinder_obstacle import QuadrupedReachEnv
 
 @dataclass
 class Args:
