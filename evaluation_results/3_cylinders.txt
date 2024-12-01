@@ -1,0 +1,36 @@
+Checkpoint Evaluation Summary for Environment: 3 Cylinders
+============================
+
+Checkpoint: ./runs/Cinnamon_3_Obstacle_Success/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.1000
+Success Rate Standard Deviation: 0.1159
+Min Success Rate: 0.0000
+Max Success Rate: 0.3750
+Average Success Once Mean: 0.5813
+Success Once Mean Standard Deviation: 0.4113
+Min Success Once Mean: 0.0000
+Max Success Once Mean: 1.0000
+
+Checkpoint: ./runs/Cinnamon_1_Obstacle_Success/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.2687
+Success Rate Standard Deviation: 0.3384
+Min Success Rate: 0.0000
+Max Success Rate: 0.8750
+Average Success Once Mean: 0.3625
+Success Once Mean Standard Deviation: 0.4237
+Min Success Once Mean: 0.0000
+Max Success Once Mean: 1.0000
+
+Checkpoint: ./runs/Cinnamon_Walking/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.2000
+Success Rate Standard Deviation: 0.4000
+Min Success Rate: 0.0000
+Max Success Rate: 1.0000
+Average Success Once Mean: 0.2125
+Success Once Mean Standard Deviation: 0.3955
+Min Success Once Mean: 0.0000
+Max Success Once Mean: 1.0000
+
