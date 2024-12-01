@@ -1,0 +1,36 @@
+Checkpoint Evaluation Summary for Environment: Cinnamon-Reach-v2
+============================
+
+Checkpoint: ./runs/Cinnamon_3_Obstacle_Success/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.2687
+Success Rate Standard Deviation: 0.1267
+Min Success Rate: 0.1250
+Max Success Rate: 0.5000
+Average Success Once Mean: 0.5312
+Success Once Mean Standard Deviation: 0.1891
+Min Success Once Mean: 0.1250
+Max Success Once Mean: 0.8750
+
+Checkpoint: ./runs/Cinnamon_1_Obstacle_Success/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.7625
+Success Rate Standard Deviation: 0.2197
+Min Success Rate: 0.2500
+Max Success Rate: 1.0000
+Average Success Once Mean: 0.8313
+Success Once Mean Standard Deviation: 0.2246
+Min Success Once Mean: 0.2500
+Max Success Once Mean: 1.0000
+
+Checkpoint: ./runs/Cinnamon_Walking/final_ckpt.pt
+Total Runs: 20
+Average Success Rate: 0.0000
+Success Rate Standard Deviation: 0.0000
+Min Success Rate: 0.0000
+Max Success Rate: 0.0000
+Average Success Once Mean: 0.0063
+Success Once Mean Standard Deviation: 0.0272
+Min Success Once Mean: 0.0000
+Max Success Once Mean: 0.1250
+
